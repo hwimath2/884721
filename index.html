@@ -1897,7 +1897,7 @@
     const userAnswer = selectedOption.getAttribute('data-option'); // 선택한 옵션의 번호 (1, 2, 3...)
 
     if(Array.isArray(q.answer) && q.answer.length > 1) {
-      /* 복수 선택 로직 */
+      /* 복수 선택 로직 - 기존과 동일하게 유지 */
       if(selectedOptions.includes(userAnswer)) {
         selectedOptions = selectedOptions.filter(opt => opt !== userAnswer);
         selectedOption.classList.remove("selected");
@@ -1910,18 +1910,11 @@
       const confirmBtn = document.getElementById('checkButton');
       if(confirmBtn) { confirmBtn.disabled = (selectedOptions.length === 0); }
     } else {
-      /* 단일 선택 로직 - 바로 정답 확인 */
+      /* 단일 선택 로직 - 휘매쓰 학습용 방식으로 수정 */
       answerSubmitted = true;
-      let isCorrect;
-
-      // q.answer가 배열 형태일 수도 있고, 단일 값일 수도 있음을 고려
-      if (Array.isArray(q.answer)) {
-          // answer가 배열이면 첫 번째 요소와 비교 (또는 문제 정의에 따라 다른 로직 적용)
-          isCorrect = (userAnswer === q.answer[0].toString());
-      } else {
-          // answer가 단일 값이면 직접 비교
-          isCorrect = (userAnswer === q.answer.toString());
-      }
+      
+      // 답안 비교 로직 수정
+      const isCorrect = userAnswer === String(q.answer);
 
       if(isCorrect) {
         /* 정답인 경우 */
@@ -1937,19 +1930,14 @@
       userAnswers.push({
         questionId: q.id,
         userAnswer: userAnswer,
-        correctAnswer: q.answer, // 원본 정답 형태 유지
+        correctAnswer: q.answer,
         isCorrect: isCorrect,
         score: isCorrect ? (q.score || defaultScore) : 0
       });
 
-      elements.nextButton.disabled = false; /* 다음문제 버튼 활성화 */
-      // Disable all options after selection
+      elements.nextButton.disabled = false;
       document.querySelectorAll('.option').forEach(opt => {
-          opt.style.pointerEvents = 'none';
-          // Make unselected options slightly transparent for visual feedback
-          if (!opt.classList.contains('selected') && !opt.classList.contains('correct') && !opt.classList.contains('incorrect')) {
-              // opt.style.opacity = '0.6'; // 필요시 활성화
-          }
+        opt.style.pointerEvents = 'none';
       });
     }
   }
@@ -2042,30 +2030,20 @@
     let isCorrectOverall = true;
     let userAnswerArray = [];
 
-    /* 각 입력 필드별 정답 확인 */
+    /* 각 입력 필드별 정답 확인 - 휘매쓰 학습용 방식으로 수정 */
     inputs.forEach((input, index) => {
-      // Normalize user answer: trim whitespace, convert to lowercase
-      const userAns = input.value.trim().toLowerCase().replace(/\s+/g, '');
-      userAnswerArray.push(input.value.trim()); // Store original trimmed value for logging
+      const userAns = input.value.trim();
+      userAnswerArray.push(userAns);
 
-      let correctAnsNormalized = "";
-      // Determine the correct answer for this input field
-      // q.answer가 배열일 수도, 단일 값일 수도 있음을 고려
-      const correctAnsRaw = Array.isArray(q.answer) ? q.answer[index] : q.answer;
-
-      if (correctAnsRaw !== undefined && correctAnsRaw !== null) {
-           // Normalize correct answer: convert to string, trim, lowercase, remove spaces
-           correctAnsNormalized = correctAnsRaw.toString().trim().toLowerCase().replace(/\s+/g, '');
-      }
-
-      // Compare normalized answers
-      if(userAns !== correctAnsNormalized) {
+      const correctAns = Array.isArray(q.answer) ? String(q.answer[index]) : String(q.answer);
+      
+      if(userAns !== correctAns) {
         isCorrectOverall = false;
         input.classList.add('incorrect');
       } else {
         input.classList.add('correct');
       }
-      input.readOnly = true; // Make input read-only after checking
+      input.readOnly = true;
     });
 
     if(isCorrectOverall) {
